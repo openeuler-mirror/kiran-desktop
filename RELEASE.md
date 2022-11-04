@@ -1,4 +1,18 @@
+# Release 2.4 (2022-11-04)
+
+- 控制中心前端
+  - 插件接口调整,更灵活,搜索信息更完整
+  - 控制中心调整为色块设计
+  - 网络设置重构
+- 会话管理
+  - 会话管理拉起登陆器
+  - 桌面会话提供两个选项：kiran和kiran-wayland
+  - 图形相关的功能都放入单独进程中进行实现
+  - 整个项目由GTK改为QT
+- kiran-widgets-qt5和kiran-qt5-integration：根据新的UI设计调整QT主题。
+
 # Release 2.3 (2022-07-11)
+
 - 添加Qt5主题(kiran-qt5-integration)
 - 控制中心前端：
   - 整合控制中心插件
