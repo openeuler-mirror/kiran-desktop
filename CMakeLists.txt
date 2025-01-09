@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
-project(network-demo VERSION 2.5)
+
+project(kiran-desktop VERSION 2.6)
+set(KIRAN_DESKTOP_VERSION 2.6)
+set(KIRAN_DESKTOP_DEV_API_VERSION 2)
+
 include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -14,40 +18,41 @@ find_package(PkgConfig REQUIRED)
 find_package(KF5NetworkManagerQt REQUIRED)
 
 pkg_search_module(KLOG REQUIRED klog-qt5)
+find_package(Qt5 COMPONENTS
+        Core
+        Gui
+        Widgets
+        Svg
+        DBus
+        Network
+        LinguistTools)
 
 if (${KF5NetworkManagerQt_VERSION} VERSION_GREATER_EQUAL 5.62)
     add_definitions(-DWIRELESS_NETWORK_SCAN_FINISHED_SIGNAL)
 endif()
 
-find_package(Qt5 COMPONENTS
-        Core
-        Gui
-        Widgets
-        Multimedia
-        Network
-        X11Extras
-        Svg
-        DBus
-        Xml
-        Concurrent
-        LinguistTools)
-
 file(GLOB_RECURSE SOURCES_FILE "./src/*.cpp" "./src/*.h" "./include/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES_FILE})
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        SOVERSION ${KIRAN_DESKTOP_DEV_API_VERSION})
+
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_BINARY_DIR} 
-    ${KLOG_INCLUDE_DIRS}
-    ./include)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${KLOG_INCLUDE_DIRS})
+
+target_include_directories(${PROJECT_NAME} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${KLOG_LIBRARIES}
     Qt5::Core
     Qt5::Gui
-    Qt5::Svg
-    Qt5::X11Extras
     Qt5::Widgets
+    Qt5::Svg
+    Qt5::Network
     KF5::NetworkManagerQt)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/)
@@ -55,4 +60,9 @@ install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/)
 file(GLOB_RECURSE HEADERS_FILE "./include/*.h")
 install(FILES ${HEADERS_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
+set(KIRAN_DESKTOP_LIB_DIR ${CMAKE_INSTALL_LIBDIR}/)
+set(KIRAN_DESKTOP_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/data/kiran-desktop.pc.in kiran-desktop.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kiran-desktop.pc
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig/)
 add_subdirectory(example)

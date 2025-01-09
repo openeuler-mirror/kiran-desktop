@@ -1,0 +1,10 @@
+libdir=@KIRAN_DESKTOP_LIB_DIR@
+includedir=@KIRAN_DESKTOP_INCLUDE_DIR@
+ApiVersion=@KIRAN_DESKTOP_DEV_API_VERSION@
+
+Name: kiran-desktop
+Description: kiran-desktop Shared API library
+Requires: Qt5Core Qt5Gui Qt5Widgets Qt5DBus Qt5Svg Qt5Network klog-qt5
+Version: @KIRAN_DESKTOP_VERSION@
+Libs: -L${libdir} -lkiran-desktop
+Cflags: -I${includedir}/kiran-desktop
