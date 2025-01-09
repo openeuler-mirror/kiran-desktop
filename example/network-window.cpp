@@ -73,9 +73,31 @@ void NetworkWindow::init()
         m_networkManager->requestScan();
     }
 
-    // 重新刷新按钮
-    connect(ui->btn_refresh, &QPushButton::clicked, this, [this]()
-            { this->m_networkManager->requestScan(); });
+    // clang-format off
+    // 刷新网络
+    connect(ui->btn_refresh, &QPushButton::clicked, this, [this](){ 
+        this->m_networkManager->requestScan(); 
+    });
+    
+    // 忽略/忘记网络配置
+    connect(ui->btn_ignore, &QPushButton::clicked, this, [this](){
+        auto items = ui->list_network->selectedItems();
+        for(auto  item : items )
+        {
+            auto ssid = item->data(NETWORK_ITEM_SSID_ROLE).toString();
+            m_networkManager->removeNetworkConnection(ssid);
+        } 
+    });
+
+    connect(ui->btn_disconnect,&QPushButton::clicked,this,[this](){
+        m_networkManager->deactivateConnection();
+    });
+    // clang-format on
+
+    // 当前激活的无线网络信息展示
+    onActivateNetworkChanged(m_networkManager->activatedNetowrk());
+    connect(m_networkManager, &WirelessNetworkManager::activeNetworkChanged,
+            this, &NetworkWindow::onActivateNetworkChanged);
 
     connect(ui->list_network, &QListWidget::itemActivated, this, &NetworkWindow::onItemActivated);
 
@@ -148,6 +170,11 @@ void NetworkWindow::onNetworkDisappeared(const QString &ssid)
     }
 }
 
+void NetworkWindow::onActivateNetworkChanged(const QString &ssid)
+{
+    ui->label_activatedNetwork->setText(ssid);
+}
+
 void NetworkWindow::onItemActivated(QListWidgetItem *item)
 {
     // 检查网络能否直接连接(存在已有配置)
@@ -197,5 +224,5 @@ void NetworkWindow::onSecretAgentRequsetPasswd(const QString &devicePath,
     QString label = QString("WI-FI(%1) requires password re-entry").arg(ssid);
     QString passwd = QInputDialog::getText(this, "Password", label, QLineEdit::PasswordEchoOnEdit, "", &isOK);
 
-    m_secretAgent->respondPasswdRequest(ssid,passwd,!isOK);
+    m_secretAgent->respondPasswdRequest(ssid, passwd, !isOK);
 }

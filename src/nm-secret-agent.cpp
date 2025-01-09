@@ -77,21 +77,19 @@ namespace Kiran
         request.setting_name = setting_name;
         request.message = message();
 
-        bool isWirelessConn = false;
         auto connectionSettings = ConnectionSettings::Ptr::create(connection);
         if (connectionSettings->connectionType() == NetworkManager::ConnectionSettings::Wireless)
         {
             auto wirelessSetting = connectionSettings->setting(Setting::Wireless).dynamicCast<WirelessSetting>();
             request.ssid = wirelessSetting->ssid();
-            isWirelessConn = true;
         }
         d_ptr->m_calls << request;
 
-        KLOG_INFO(qLcNetworkSecretAgent).nospace() << "get secrets for wireless network"
-                                                   << request.callId << "," << request.ssid
-                                                   << "(" << connection_path << ")"
-                                                   << " ,hints(" << hints.join(',') << ")"
-                                                   << " ,flags(" << flags << ")";
+        KLOG_DEBUG(qLcNetworkSecretAgent).nospace() << "get secrets for wireless network"
+                                                    << request.callId << ", " << request.ssid
+                                                    << "(" << connection_path << ")"
+                                                    << " ,hints(" << hints.join(',') << ")"
+                                                    << " ,flags(" << flags << ")";
 
         d_func()->processNext();
         return {};
@@ -164,7 +162,8 @@ namespace Kiran
     void NMSecretAgent::respondPasswdRequest(const QString &ssid, const QString &password, bool isCancel)
     {
         KLOG_INFO(qLcNetworkSecretAgent) << "password inputed, ssid:" << ssid << "cancel:" << isCancel;
-        if( ssid != d_ptr->m_requestedPasswordSsid )
+
+        if (ssid != d_ptr->m_requestedPasswordSsid)
         {
             KLOG_WARNING(qLcNetworkSecretAgent) << "inconsistency between reply ssid and request ssid";
             return;
@@ -194,7 +193,7 @@ namespace Kiran
             else
             {
                 QVariantMap result;
-                KLOG_INFO(qLcNetworkSecretAgent) << request.callId << "fill" << ssid << "secrets" << needSecrets.first();
+                KLOG_INFO(qLcNetworkSecretAgent) << request.callId << "fill" << ssid << "secret" << needSecrets.first();
                 result.insert(needSecrets.first(), password);
                 request.connection[request.setting_name] = result;
                 d_func()->sendSecrets(request.connection, request.message);
@@ -265,7 +264,7 @@ namespace Kiran
             if (vpnSetting->serviceType() == QLatin1String("org.freedesktop.NetworkManager.ssh") && vpnSetting->data()["auth-type"] == QLatin1String("ssh-agent"))
             {
                 QString authSock = qgetenv("SSH_AUTH_SOCK");
-                qDebug() << Q_FUNC_INFO << "Sending SSH auth socket" << authSock;
+                KLOG_DEBUG(qLcNetworkSecretAgent) << "get secrets,sending SSH auth socket" << authSock;
 
                 if (authSock.isEmpty())
                 {
@@ -291,9 +290,8 @@ namespace Kiran
         {
             if (userRequested && (requestNew || allowInteraction) && !setting->needSecrets(requestNew).isEmpty())
             {
-                KLOG_WARNING(qLcNetworkSecretAgent).nospace() << "handles GetSecrets requests"
-                                                              << "(" << request.connection_path << ',' << request.callId << ")"
-                                                              << "for wireless networks only";
+                KLOG_WARNING(qLcNetworkSecretAgent).nospace() << "handles requests for wireless network"
+                                                              << "(" << request.connection_path << ',' << request.callId << ")";
                 auto wirelessSetting = connectionSettings->setting(Setting::Wireless).dynamicCast<WirelessSetting>();
 
                 QString devPath;
@@ -309,12 +307,12 @@ namespace Kiran
 
                 m_requestedPasswordSsid = wirelessSetting->ssid();
                 auto ssid = request.ssid;
-                QTimer::singleShot(0, this, [this,devPath,ssid]()
-                                   {
-                                       Q_EMIT q_func() -> requestPassword(devPath, ssid, true);
-                                   });
-                KLOG_INFO(qLcNetworkSecretAgent) << "request passwd for" << m_requestedPasswordSsid;
 
+                // 延迟发送，先等处理结束
+                QTimer::singleShot(0, this, [this, devPath, ssid]()
+                                   { Q_EMIT q_func() -> requestPassword(devPath, ssid, true); });
+                KLOG_INFO(qLcNetworkSecretAgent) << "request passwd for" << m_requestedPasswordSsid;
+                
                 // 保留请求记录后续接受用户输入再回复
                 removeRequest = false;
             }

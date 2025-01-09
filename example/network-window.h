@@ -44,6 +44,7 @@ private:
 private slots:
     void onNetworkAppeared(const QString &ssid);
     void onNetworkDisappeared(const QString &ssid);
+    void onActivateNetworkChanged(const QString& ssid);
     void onItemActivated(QListWidgetItem *item);
     void onDeviceStateChagned(NetworkManager::Device::State state);
     void onSecretAgentRequsetPasswd(const QString &devicePath,

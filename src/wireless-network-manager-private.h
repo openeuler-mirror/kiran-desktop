@@ -17,7 +17,7 @@
 #include <NetworkManagerQt/Utils>
 #include "wireless-network-manager.h"
 
-#define DBUS_WATCHER_PROPERTY_CONNECTION_NAME "dbus_watch_property_connection_name"
+#define DBUS_WATCHER_PROPERTY_SSID "dbus_watch_property_ssid"
 
 using namespace NetworkManager;
 
@@ -35,12 +35,12 @@ namespace Kiran
         void loadNetworkInfoList();
 
     private slots:
-        /* 网卡下无线网络新增/消失 */
         void onNetworkAppeared(const QString &ssid);
         void onNetworkDisappeared(const QString &ssid);
         void onStateChanged(Device::State newstate, Device::State oldstate, Device::StateChangeReason reason);
         void onActiveAccessPointChanged(const QString &ap);
         void onActivateConnectionFinished(QDBusPendingCallWatcher *watcher);
+        void onDeviceActiveConnectionChanged();
 
     private:
         /* 缓存中添加/删除网络 */
@@ -51,7 +51,7 @@ namespace Kiran
         QList<WirelessSecurityType> getAPSecuritySupport(const QString &ap);        
         WifiSecurityType getBestNetworkSecurity(const QString &ssid);
         WifiSecurityTypeList getSupportedNetworkSecuritys(const QString &ssid);
-        Connection::Ptr getWirelessNetworkConnection(const QString &ssid);
+        Connection::List getWirelessNetworkConnection(const QString &ssid);
         ConnectionSettings::Ptr createConnectionSettings(const QString &ssid,
                                                          WifiSecurityType securityType,
                                                          const QString &password,

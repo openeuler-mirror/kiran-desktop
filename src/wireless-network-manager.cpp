@@ -1,6 +1,8 @@
 #include "wireless-network-manager.h"
 #include "wireless-network-manager-private.h"
 #include "def.h"
+#include "logging-category.h"
+
 #include <NetworkManagerQt/Utils>
 #include <NetworkManagerQt/Ipv4Setting>
 #include <NetworkManagerQt/Manager>
@@ -35,7 +37,7 @@ namespace Kiran
         return d_ptr->m_device->state();
     }
 
-    QString WirelessNetworkManager::activateNetowrk() const
+    QString WirelessNetworkManager::activatedNetowrk() const
     {
         auto ap = d_ptr->m_device->activeAccessPoint();
         if (ap)
@@ -48,6 +50,11 @@ namespace Kiran
     QString WirelessNetworkManager::uni() const
     {
         return d_ptr->m_device->uni();
+    }
+
+    QString WirelessNetworkManager::interfaceName() const
+    {
+        return d_ptr->m_device->interfaceName();
     }
 
     void WirelessNetworkManager::requestScan()
@@ -86,8 +93,8 @@ namespace Kiran
         auto networkInfo = d_ptr->m_networkInfoMap[ssid];
 
         // 存在可直接使用的wifi连接配置
-        auto connection = d_ptr->getWirelessNetworkConnection(ssid);
-        return !connection.isNull();
+        auto connectioList = d_ptr->getWirelessNetworkConnection(ssid);
+        return !connectioList.isEmpty();
     }
 
     WifiSecurityType WirelessNetworkManager::networkBestSecurityType(const QString &ssid)
@@ -106,23 +113,60 @@ namespace Kiran
         return d_ptr->getSupportedNetworkSecuritys(ssid);
     }
 
+    void WirelessNetworkManager::removeNetworkConnection(const QString &ssid)
+    {
+        Connection::Ptr res;
+        auto connectionList = d_ptr->getWirelessNetworkConnection(ssid);
+        if (connectionList.isEmpty())
+        {
+            KLOG_WARNING(qLcNetwork) << ssid << "no connection configuration available";
+            return;
+        }
+
+        for (auto conn : connectionList)
+        {
+            KLOG_INFO(qLcNetwork) << "remove" << ssid << "connection" << conn->path();
+            conn->remove();
+        }
+    }
+
+    void WirelessNetworkManager::deactivateConnection()
+    {
+        ActiveConnection::Ptr activeConnection = NetworkManager::findActiveConnection(d_ptr->m_device->uni());
+        if (activeConnection.isNull())
+        {
+            KLOG_WARNING(qLcNetwork) << interfaceName() << "deactivate connecion failed, no active connection";
+            return;
+        }
+
+        KLOG_INFO(qLcNetwork) << "deactivate" << interfaceName()
+                              << activeConnection->id()
+                              << activeConnection->path();
+        NetworkManager::deactivateConnection(activeConnection->path());
+    }
+
     void WirelessNetworkManager::activateNetowrk(const QString &ssid)
     {
         RETURN_IF_FALSE_WITH_WARNNING(d_ptr->m_networkInfoMap.contains(ssid),
                                       QString("network %1 not exists").arg(ssid));
 
         auto networkInfo = d_ptr->m_networkInfoMap[ssid];
-        auto connection = d_ptr->getWirelessNetworkConnection(ssid);
-        if (connection.isNull())
+        auto connectionList = d_ptr->getWirelessNetworkConnection(ssid);
+
+        if (connectionList.isEmpty())
             return;
 
-        qDebug() << d_ptr->m_device->interfaceName() << "activate connection:" << connection->path();
+        auto connection = connectionList.first();
+        KLOG_INFO(qLcNetwork).nospace() << "activate " << d_ptr->m_device->interfaceName()
+                                        << " network(" << ssid << ")"
+                                        << " connection(" << connection->path() << ")";
 
         auto pendingReply = NetworkManager::activateConnection(connection->path(),
                                                                d_ptr->m_device->uni(),
                                                                networkInfo.referencePointPath);
-        pendingReply.waitForFinished();
+
         auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
+        pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
         connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
                 d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
         return;
@@ -132,11 +176,23 @@ namespace Kiran
                                                              const QString &password,
                                                              WifiSecurityType securityType)
     {
+        KLOG_INFO(qLcNetwork).nospace() << "activate " << d_ptr->m_device->interfaceName()
+                                        << " network(" << ssid << ")";
+
         auto connectionSettings = d_ptr->createConnectionSettings(ssid, securityType, password, true);
+        if (connectionSettings.isNull())
+        {
+            KLOG_WARNING(qLcNetwork) << "create connection settings for" << ssid
+                                     << "failed, unsupported security type";
+            return;
+        }
+
         auto pendingReply = addAndActivateConnection(connectionSettings->toMap(),
                                                      d_ptr->m_device->uni(),
                                                      "");
+
         auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
+        pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
         connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
                 d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
     }
@@ -165,6 +221,8 @@ namespace Kiran
 
         if (connectionSettings.isNull())
         {
+            KLOG_WARNING(qLcNetwork) << "create connection settings for" << ssid << "failed,"
+                                     << "unsupported security type";
             return;
         }
 
@@ -172,6 +230,7 @@ namespace Kiran
                                                      d_ptr->m_device->uni(),
                                                      networkInfo.referencePointPath);
         auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
+        pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
         connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
                 d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
         return;
@@ -203,6 +262,8 @@ namespace Kiran
                 this, &WirelessNetworkManagerPrivate::onStateChanged);
         connect(m_device.data(), &WirelessDevice::activeAccessPointChanged,
                 this, &WirelessNetworkManagerPrivate::onActiveAccessPointChanged);
+        connect(m_device.data(), &Device::activeConnectionChanged,
+                this, &WirelessNetworkManagerPrivate::onDeviceActiveConnectionChanged);
     }
 
     void WirelessNetworkManagerPrivate::loadNetworkInfoList()
@@ -213,14 +274,14 @@ namespace Kiran
             addNetwork(network->ssid());
         }
 
-        qInfo() << "loadNetworkInfoList: " << m_networkInfoMap.values();
+        KLOG_DEBUG(qLcNetwork) << "loaded network list" << m_networkInfoMap.values();
     }
 
     void WirelessNetworkManagerPrivate::onNetworkAppeared(const QString &ssid)
     {
         if (!addNetwork(ssid))
         {
-            qWarning() << "onNetworkAppeared:" << ssid << "failed";
+            KLOG_WARNING(qLcNetwork) << "wireless network" << ssid << "appeared, but failed to be added";
         }
     }
 
@@ -228,7 +289,7 @@ namespace Kiran
     {
         if (!removeNetwork(ssid))
         {
-            qWarning() << "onNetworkDisappeared:" << ssid << "failed";
+            KLOG_WARNING(qLcNetwork) << "wireless network" << ssid << "disappeared, but failed to be remove";
         }
     }
 
@@ -244,9 +305,37 @@ namespace Kiran
     void WirelessNetworkManagerPrivate::onActivateConnectionFinished(QDBusPendingCallWatcher *watcher)
     {
         auto reply = watcher->reply();
-        auto connectionName = watcher->property(DBUS_WATCHER_PROPERTY_CONNECTION_NAME).toString();
-        qDebug() << "watcher finished:" << watcher->isValid() << watcher->error().message();
-        qDebug() << "activate connection finished:" << connectionName << reply;
+        auto ssid = watcher->property(DBUS_WATCHER_PROPERTY_SSID).toString();
+        KLOG_DEBUG(qLcNetwork) << ssid << "activate connection pending call finished" << reply;
+    }
+
+    /**
+     * 设备ActiveConnection改变处理方法：
+     * 通过激活连接，拿到连接信息，再拿到连接配置
+     * 通过连接配置中填写的ssid信息，拿到所激活的无线网络
+     */
+    void WirelessNetworkManagerPrivate::onDeviceActiveConnectionChanged()
+    {
+        QString activeNetworkSsid = "";
+        auto activeConn = m_device->activeConnection();
+
+        if (!activeConn.isNull())
+        {
+            KLOG_WARNING(qLcNetwork) << q_ptr->interfaceName()
+                                     << "active network is empty";
+        }
+        else
+        {
+            auto connection = activeConn->connection();
+            auto connectionSettings = connection->settings();
+            auto wirelessSetting = connectionSettings->setting(Setting::Wireless).dynamicCast<WirelessSetting>();
+            activeNetworkSsid = wirelessSetting->ssid();
+            KLOG_DEBUG(qLcNetwork) << q_ptr->interfaceName()
+                                   << "active network"  << activeNetworkSsid 
+                                   << ", with connection settings" << wirelessSetting->name();
+        }
+
+        emit q_func() -> activeNetworkChanged(activeNetworkSsid);
     }
 
     bool WirelessNetworkManagerPrivate::addNetwork(const QString &ssid, bool isInit)
@@ -384,9 +473,9 @@ namespace Kiran
         return securityList;
     }
 
-    Connection::Ptr WirelessNetworkManagerPrivate::getWirelessNetworkConnection(const QString &ssid)
+    Connection::List WirelessNetworkManagerPrivate::getWirelessNetworkConnection(const QString &ssid)
     {
-        Connection::Ptr res;
+        Connection::List res;
         auto connectionList = m_device->availableConnections();
         for (auto connection : connectionList)
         {
@@ -428,8 +517,7 @@ namespace Kiran
             // 检查配置ssid匹配
             if (QString(wirelessSetting->ssid()) == ssid)
             {
-                res = connection;
-                break;
+                res << connection;
             }
         }
 
@@ -479,7 +567,8 @@ namespace Kiran
             break;
         }
         default:
-            qWarning() << "unsupport securityType:" << securityType;
+            KLOG_WARNING(qLcNetwork) << "create connection settings for" << ssid
+                                     << "unsupported security type";
             return ConnectionSettings::Ptr();
         }
 
