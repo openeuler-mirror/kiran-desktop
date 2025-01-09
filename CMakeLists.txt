@@ -13,6 +13,8 @@ set(CMAKE_AUTORCC ON)
 find_package(PkgConfig REQUIRED)
 find_package(KF5NetworkManagerQt REQUIRED)
 
+pkg_search_module(KLOG REQUIRED klog-qt5)
+
 if (${KF5NetworkManagerQt_VERSION} VERSION_GREATER_EQUAL 5.62)
     add_definitions(-DWIRELESS_NETWORK_SCAN_FINISHED_SIGNAL)
 endif()
@@ -31,9 +33,16 @@ find_package(Qt5 COMPONENTS
         LinguistTools)
 
 file(GLOB_RECURSE SOURCES_FILE "./src/*.cpp" "./src/*.h" "./include/*.h")
+
 add_library(${PROJECT_NAME} SHARED ${SOURCES_FILE})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ./include)
+
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    ${CMAKE_CURRENT_BINARY_DIR} 
+    ${KLOG_INCLUDE_DIRS}
+    ./include)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE 
+    ${KLOG_LIBRARIES}
     Qt5::Core
     Qt5::Gui
     Qt5::Svg
@@ -41,7 +50,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Widgets
     KF5::NetworkManagerQt)
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/network-demo/)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/)
 
 file(GLOB_RECURSE HEADERS_FILE "./include/*.h")
 install(FILES ${HEADERS_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})

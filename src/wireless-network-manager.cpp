@@ -52,6 +52,7 @@ namespace Kiran
 
     void WirelessNetworkManager::requestScan()
     {
+        d_ptr->m_device->requestScan();
     }
 
     WirelessNetworkInfoList WirelessNetworkManager::getNetworkInfoList()
@@ -120,11 +121,10 @@ namespace Kiran
         auto pendingReply = NetworkManager::activateConnection(connection->path(),
                                                                d_ptr->m_device->uni(),
                                                                networkInfo.referencePointPath);
-
+        pendingReply.waitForFinished();
         auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
         connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
                 d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
-
         return;
     }
 
@@ -132,7 +132,6 @@ namespace Kiran
                                                              const QString &password,
                                                              WifiSecurityType securityType)
     {
-        //TODO: securityType 判断
         auto connectionSettings = d_ptr->createConnectionSettings(ssid, securityType, password, true);
         auto pendingReply = addAndActivateConnection(connectionSettings->toMap(),
                                                      d_ptr->m_device->uni(),
@@ -219,7 +218,6 @@ namespace Kiran
 
     void WirelessNetworkManagerPrivate::onNetworkAppeared(const QString &ssid)
     {
-        qDebug() << "onNetworkAppeared:" << ssid;
         if (!addNetwork(ssid))
         {
             qWarning() << "onNetworkAppeared:" << ssid << "failed";
@@ -228,7 +226,6 @@ namespace Kiran
 
     void WirelessNetworkManagerPrivate::onNetworkDisappeared(const QString &ssid)
     {
-        qDebug() << "onNetworkAppeared:" << ssid;
         if (!removeNetwork(ssid))
         {
             qWarning() << "onNetworkDisappeared:" << ssid << "failed";
@@ -237,21 +234,19 @@ namespace Kiran
 
     void WirelessNetworkManagerPrivate::onStateChanged(Device::State newstate, Device::State oldstate, Device::StateChangeReason reason)
     {
-        qDebug() << "onStateChanged:" << newstate;
         emit q_ptr->stateChanged(newstate);
     }
 
     void WirelessNetworkManagerPrivate::onActiveAccessPointChanged(const QString &ap)
     {
-        qDebug() << "onActiveAccessPointChanged:" << ap;
     }
 
     void WirelessNetworkManagerPrivate::onActivateConnectionFinished(QDBusPendingCallWatcher *watcher)
     {
         auto reply = watcher->reply();
         auto connectionName = watcher->property(DBUS_WATCHER_PROPERTY_CONNECTION_NAME).toString();
+        qDebug() << "watcher finished:" << watcher->isValid() << watcher->error().message();
         qDebug() << "activate connection finished:" << connectionName << reply;
-        watcher->deleteLater();
     }
 
     bool WirelessNetworkManagerPrivate::addNetwork(const QString &ssid, bool isInit)

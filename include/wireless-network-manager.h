@@ -28,10 +28,11 @@ namespace Kiran
 {
     class WirelessNetworkManagerPrivate;
     typedef QList<WifiSecurityType> WifiSecurityTypeList;
-    class WirelessNetworkManager : public QObject
+    class Q_DECL_EXPORT WirelessNetworkManager : public QObject
     {
         Q_OBJECT
         Q_DECLARE_PRIVATE(WirelessNetworkManager);
+
     public:
         WirelessNetworkManager(const NetworkManager::WirelessDevice::Ptr &device,
                                QObject *parent = nullptr);
@@ -41,7 +42,7 @@ namespace Kiran
 
         NetworkManager::Device::State state() const;
         QString uni() const;
-        QString activateNetowrk()const;
+        QString activateNetowrk() const;
 
         void requestScan();
 
@@ -52,16 +53,18 @@ namespace Kiran
         WifiSecurityType networkBestSecurityType(const QString &ssid);
         WifiSecurityTypeList networkSupportSecurityTypeList(const QString &ssid);
 
+        /* 删除指定无线网络的已有配置(忘记已知网络) */
+        void removeNetworkConnection(const QString &ssid);
+
         /* 激活网络,使用已有的网络配置 */
         void activateNetowrk(const QString &ssid);
-
         /* 添加密码形式激活网的配置并尝试激活隐藏网络，适用于WpaPsk/Wpa2Psk/Wpa3 Person/WpaNone */
-        void addAndActivateHiddenNetwork(const QString &ssid,const QString &password,WifiSecurityType securityType);
+        void addAndActivateHiddenNetwork(const QString &ssid, const QString &password, WifiSecurityType securityType);
         /* 添加密码形式激活网的配置并尝试激活网络，适用于WpaPsk/Wpa2Psk/Wpa3 Person/WpaNone */
         void addAndActivateNetwork(const QString &ssid, const QString &password);
-
         /* 添加EAP形式激活网的配置并尝试激活网络，适用于Wpa/Wpa2 Enterprise */
         // void addAndActivateNetworkByEAP(const QString &ssid, const QString &password);
+
     signals:
         void stateChanged(NetworkManager::Device::State state);
         void networkAppeared(const QString &ssid);
