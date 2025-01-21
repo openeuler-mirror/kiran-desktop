@@ -20,14 +20,6 @@ namespace Kiran
         d_ptr->init();
     }
 
-    WirelessNetworkManager::WirelessNetworkManager(
-        const QString &devicePath, QObject *parent)
-        : WirelessNetworkManager(
-              WirelessDevice::Ptr(new WirelessDevice(devicePath)),
-              parent)
-    {
-    }
-
     WirelessNetworkManager::~WirelessNetworkManager()
     {
     }

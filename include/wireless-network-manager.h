@@ -31,9 +31,9 @@ namespace Kiran
         Q_DECLARE_PRIVATE(WirelessNetworkManager);
 
     public:
+        // NetworkManager::WirelessDevice::Ptr请使用NetworkManager::findNetworkInterface所构造的对象
+        // 避免多次创建对象，导致信号处理时数据不同步问题
         WirelessNetworkManager(const NetworkManager::WirelessDevice::Ptr &device,
-                               QObject *parent = nullptr);
-        WirelessNetworkManager(const QString &devicePath,
                                QObject *parent = nullptr);
         ~WirelessNetworkManager() override;
 
