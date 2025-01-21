@@ -324,7 +324,7 @@ namespace Kiran
         QString activeNetworkSsid = "";
         auto activeConn = m_device->activeConnection();
 
-        if (!activeConn.isNull())
+        if (activeConn.isNull())
         {
             KLOG_WARNING(qLcNetwork) << q_ptr->interfaceName()
                                      << "active network is empty";
