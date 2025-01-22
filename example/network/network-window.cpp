@@ -189,18 +189,29 @@ void NetworkWindow::onItemActivated(QListWidgetItem *item)
 
     // 检查网络最佳安全类型,暂时只做密码认证
     auto bestSecurityType = m_networkManager->networkBestSecurityType(ssid);
-    bool passwdAuth = (bestSecurityType == SECURITY_TYPE_WPA_AND_WPA2_PERSON) || (bestSecurityType == SECURITY_TYPE_WPA3_PERSON);
-    if (!passwdAuth)
-    {
-        return;
-    }
 
-    // 请求输入密码
-    bool isOk = false;
-    QString label = QString("WI-FI(%1) requires password").arg(ssid);
-    QString passwd = QInputDialog::getText(this, "Password", label, QLineEdit::PasswordEchoOnEdit, "", &isOk);
-    if (!isOk || passwd.isEmpty())
+    QString passwd;
+    bool passwdAuth = (bestSecurityType == SECURITY_TYPE_WPA_AND_WPA2_PERSON) || (bestSecurityType == SECURITY_TYPE_WPA3_PERSON);
+
+    if (bestSecurityType == SECURITY_TYPE_NONE)
     {
+        qInfo() << "wirelesss network" << ssid << "no security type";
+    }
+    else if (passwdAuth)
+    {
+        // 请求输入密码
+        bool isOk = false;
+        QString label = QString("WI-FI(%1) requires password").arg(ssid);
+        passwd = QInputDialog::getText(this, "Password", label, QLineEdit::PasswordEchoOnEdit, "", &isOk);
+        if (!isOk || passwd.isEmpty())
+        {
+            qInfo() << "cancel input password";
+            return;
+        }
+    }
+    else
+    {
+        qInfo() << "wirelesss network" << ssid << "unknown security type";
         return;
     }
 

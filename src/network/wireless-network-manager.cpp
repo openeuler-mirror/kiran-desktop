@@ -554,13 +554,16 @@ namespace Kiran
         {
         case SECURITY_TYPE_NONE:
         {
-            wirelessSecurity->setKeyMgmt(WirelessSecuritySetting::KeyMgmt::WpaNone);
+            // 未加密的Ap，不应设置无线网络安全性
+            wirelessSecurity->setInitialized(false);
             break;
         }
         case SECURITY_TYPE_WPA_AND_WPA2_PERSON:
         {
             wirelessSecurity->setKeyMgmt(WirelessSecuritySetting::KeyMgmt::WpaPsk);
             wirelessSecurity->setPsk(password);
+            // https://www.networkmanager.dev/docs/libnm/1.40.14/NMSetting.html
+            // NMSettingSecretFlags 保存密码选项
             wirelessSecurity->setPskFlags(Setting::SecretFlagType::None);
             break;
         }
@@ -577,8 +580,6 @@ namespace Kiran
             return ConnectionSettings::Ptr();
         }
 
-        // default: Save password for all users
-        wirelessSecurity->setInitialized(true);
         return settingsPtr;
     }
 }
