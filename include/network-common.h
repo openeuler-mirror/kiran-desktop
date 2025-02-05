@@ -12,31 +12,31 @@
  * Author:     liuxinhao <liuxinhao@kylinsec.com.cn>
  */
 #pragma once
-#include <QString>
+#include <QDebug>
 #include <QList>
 #include <QMap>
-#include <QDebug>
+#include <QString>
 namespace Kiran
 {
-    typedef struct WirelessNetworkInfo
-    {
-        WirelessNetworkInfo(QString _ssid, QString _referencePointPath, int _signalStreagth);
-        WirelessNetworkInfo();
-        QString ssid;
-        QString referencePointPath;
-        int signalStreagth;
-    } WirelessNetworkInfo;
-    typedef QList<WirelessNetworkInfo> WirelessNetworkInfoList;
-    typedef QMap<QString, WirelessNetworkInfo> WirelessNetworkInfoMap;
-    QDebug operator<<(QDebug &debug, const WirelessNetworkInfo &info);
-    QDebug operator<<(QDebug &debug, const QList<WirelessNetworkInfo> &list);
+typedef struct WirelessNetworkInfo
+{
+    WirelessNetworkInfo(QString _ssid, QString _referencePointPath, int _signalStreagth);
+    WirelessNetworkInfo();
+    QString ssid;
+    QString referencePointPath;
+    int signalStreagth;
+} WirelessNetworkInfo;
+typedef QList<WirelessNetworkInfo> WirelessNetworkInfoList;
+typedef QMap<QString, WirelessNetworkInfo> WirelessNetworkInfoMap;
+QDebug operator<<(QDebug &debug, const WirelessNetworkInfo &info);
+QDebug operator<<(QDebug &debug, const QList<WirelessNetworkInfo> &list);
 
-    enum WifiSecurityType
-    {
-        SECURITY_TYPE_NONE,
-        SECURITY_TYPE_WPA_AND_WPA2_PERSON,
-        SECURITY_TYPE_WPA_AND_WPA2_ENTERPRISE,
-        SECURITY_TYPE_WPA3_PERSON,
-        SECURITY_TYPE_UNKNOWN
-    };
-}
+enum WifiSecurityType
+{
+    SECURITY_TYPE_NONE,
+    SECURITY_TYPE_WPA_AND_WPA2_PERSON,
+    SECURITY_TYPE_WPA_AND_WPA2_ENTERPRISE,
+    SECURITY_TYPE_WPA3_PERSON,
+    SECURITY_TYPE_UNKNOWN
+};
+}  // namespace Kiran

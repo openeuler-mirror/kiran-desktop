@@ -11,8 +11,10 @@
  *
  * Author:     liuxinhao <liuxinhao@kylinsec.com.cn>
  */
-#include "logging-category.h"
+#pragma once
+#include <qt5-log-i.h>
+#include <QLoggingCategory>
 
-Q_LOGGING_CATEGORY(qLcCommon,"kiran.common",QtMsgType::QtDebugMsg)
-Q_LOGGING_CATEGORY(qLcNetwork,"kiran.network",QtMsgType::QtDebugMsg)
-Q_LOGGING_CATEGORY(qLcNetworkSecretAgent,"kiran.network.secretagent",QtMsgType::QtDebugMsg)
+Q_DECLARE_LOGGING_CATEGORY(qLcCommon)
+Q_DECLARE_LOGGING_CATEGORY(qLcNetwork)
+Q_DECLARE_LOGGING_CATEGORY(qLcNetworkSecretAgent)

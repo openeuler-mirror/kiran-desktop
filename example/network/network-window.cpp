@@ -12,20 +12,20 @@
  * Author:     liuxinhao <liuxinhao@kylinsec.com.cn>
  */
 #include "network-window.h"
-#include "wireless-network-manager.h"
 #include "nm-secret-agent.h"
 #include "ui_network-window.h"
+#include "wireless-network-manager.h"
 
-#include <NetworkManagerQt/WirelessDevice>
 #include <NetworkManagerQt/Manager>
+#include <NetworkManagerQt/WirelessDevice>
 #include <QDebug>
 
 #include <QBoxLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QListWidget>
 #include <QInputDialog>
+#include <QLabel>
+#include <QListWidget>
 #include <QMetaEnum>
+#include <QPushButton>
 
 #define NETWORK_ITEM_SSID_ROLE Qt::UserRole + 1
 #define NETWORK_ITEM_SIGNAL_SIGNAL_STREAGTH Qt::UserRole + 2

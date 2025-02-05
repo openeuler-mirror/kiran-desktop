@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(kiran-desktop VERSION 2.6)
-set(KIRAN_DESKTOP_VERSION 2.6)
+project(kiran-desktop VERSION 2.7)
+set(KIRAN_DESKTOP_VERSION 2.7)
 set(KIRAN_DESKTOP_DEV_API_VERSION 2)
 
 include(GNUInstallDirs)
@@ -31,7 +31,7 @@ if (${KF5NetworkManagerQt_VERSION} VERSION_GREATER_EQUAL 5.62)
     add_definitions(-DWIRELESS_NETWORK_SCAN_FINISHED_SIGNAL)
 endif()
 
-file(GLOB_RECURSE SOURCES_FILE "./src/*.cpp" "./src/*.h" "./include/*.h")
+file(GLOB_RECURSE SOURCES_FILE "./lib/*.cpp" "./lib/*.h" "./include/*.h")
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES_FILE})
 
@@ -40,7 +40,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_BINARY_DIR} 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
     ${KLOG_INCLUDE_DIRS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC 

@@ -12,8 +12,8 @@
  * Author:     liuxinhao <liuxinhao@kylinsec.com.cn>
  */
 #pragma once
-#include <QWidget>
 #include <NetworkManagerQt/Device>
+#include <QWidget>
 
 namespace Ui
 {
@@ -22,9 +22,9 @@ class NetworkWindow;
 
 namespace Kiran
 {
-    class WirelessNetworkManager;
-    class NMSecretAgent;
-}
+class WirelessNetworkManager;
+class NMSecretAgent;
+}  // namespace Kiran
 
 class QListWidget;
 class QListWidgetItem;
@@ -44,7 +44,7 @@ private:
 private slots:
     void onNetworkAppeared(const QString &ssid);
     void onNetworkDisappeared(const QString &ssid);
-    void onActivateNetworkChanged(const QString& ssid);
+    void onActivateNetworkChanged(const QString &ssid);
     void onItemActivated(QListWidgetItem *item);
     void onDeviceStateChagned(NetworkManager::Device::State state);
     void onSecretAgentRequsetPasswd(const QString &devicePath,
@@ -52,7 +52,7 @@ private slots:
                                     bool wait);
 
 private:
-    Ui::NetworkWindow* ui = nullptr;
+    Ui::NetworkWindow *ui = nullptr;
     QString m_wirelessDevicePath;
     Kiran::WirelessNetworkManager *m_networkManager = NULL;
     Kiran::NMSecretAgent *m_secretAgent = NULL;

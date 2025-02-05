@@ -11,10 +11,10 @@
  *
  * Author:     liuxinhao <liuxinhao@kylinsec.com.cn>
  */
-#include <QApplication>
-#include <QLoggingCategory>
-#include <QDebug>
 #include <NetworkManagerQt/Manager>
+#include <QApplication>
+#include <QDebug>
+#include <QLoggingCategory>
 #include "network-window.h"
 
 int main(int argc, char *argv[])
@@ -23,19 +23,19 @@ int main(int argc, char *argv[])
 
     auto loggingCategory = QLoggingCategory::defaultCategory();
     loggingCategory->setEnabled(QtDebugMsg, true);
-    
+
     bool hasWirelessDevice = false;
     const auto deviceList = NetworkManager::networkInterfaces();
     for (auto device : deviceList)
     {
-        if ( device->type() == NetworkManager::Device::Wifi)
+        if (device->type() == NetworkManager::Device::Wifi)
         {
             hasWirelessDevice = true;
             break;
         }
     }
 
-    if( !hasWirelessDevice )
+    if (!hasWirelessDevice)
     {
         qFatal("No wireless card device detected!");
         return EXIT_FAILURE;

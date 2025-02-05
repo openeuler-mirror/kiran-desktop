@@ -15,29 +15,29 @@
 #include <NetworkManagerQt/SecretAgent>
 namespace Kiran
 {
-    class NMSecretAgentPrivate;
-    class Q_DECL_EXPORT NMSecretAgent : public NetworkManager::SecretAgent
-    {
-        Q_OBJECT
-        Q_DECLARE_PRIVATE(NMSecretAgent);
+class NMSecretAgentPrivate;
+class Q_DECL_EXPORT NMSecretAgent : public NetworkManager::SecretAgent
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(NMSecretAgent);
 
-    public:
-        explicit NMSecretAgent(QObject *parent = nullptr);
-        ~NMSecretAgent() override;
+public:
+    explicit NMSecretAgent(QObject *parent = nullptr);
+    ~NMSecretAgent() override;
 
-    Q_SIGNALS:
-        void requestPassword(const QString &devicePath, const QString &ssid, bool wait);
+Q_SIGNALS:
+    void requestPassword(const QString &devicePath, const QString &ssid, bool wait);
 
-    public slots:
-        void respondPasswdRequest(const QString &ssid, const QString &password, bool isCancel);
+public slots:
+    void respondPasswdRequest(const QString &ssid, const QString &password, bool isCancel);
 
-    private Q_SLOTS:
-        NMVariantMapMap GetSecrets(const NMVariantMapMap &, const QDBusObjectPath &, const QString &, const QStringList &, uint) override;
-        void SaveSecrets(const NMVariantMapMap &connection, const QDBusObjectPath &connection_path) override;
-        void DeleteSecrets(const NMVariantMapMap &, const QDBusObjectPath &) override;
-        void CancelGetSecrets(const QDBusObjectPath &, const QString &) override;
+private Q_SLOTS:
+    NMVariantMapMap GetSecrets(const NMVariantMapMap &, const QDBusObjectPath &, const QString &, const QStringList &, uint) override;
+    void SaveSecrets(const NMVariantMapMap &connection, const QDBusObjectPath &connection_path) override;
+    void DeleteSecrets(const NMVariantMapMap &, const QDBusObjectPath &) override;
+    void CancelGetSecrets(const QDBusObjectPath &, const QString &) override;
 
-    private:
-        NMSecretAgentPrivate *d_ptr;
-    };
+private:
+    NMSecretAgentPrivate *d_ptr;
 };
+};  // namespace Kiran
