@@ -139,7 +139,7 @@ void WirelessNetworkManager::removeNetworkConnection(const QString &ssid)
 
 void WirelessNetworkManager::deactivateConnection()
 {
-    ActiveConnection::Ptr activeConnection = NetworkManager::findActiveConnection(d_ptr->m_device->uni());
+    auto activeConnection = d_ptr->m_device->activeConnection();
     if (activeConnection.isNull())
     {
         KLOG_WARNING(qLcNetwork) << interfaceName() << "deactivate connecion failed, no active connection";

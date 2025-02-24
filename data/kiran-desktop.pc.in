@@ -6,5 +6,5 @@ Name: kiran-desktop
 Description: kiran-desktop Shared API library
 Requires: Qt5Core Qt5Gui Qt5Widgets Qt5DBus Qt5Svg Qt5Network klog-qt5
 Version: @KIRAN_DESKTOP_VERSION@
-Libs: -L${libdir} -lkiran-desktop
-Cflags: -I${includedir}/kiran-desktop
+Libs: -L${libdir} -l@PROJECT_NAME@
+Cflags: -I${includedir}
