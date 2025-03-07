@@ -39,7 +39,6 @@ private slots:
     void onNetworkDisappeared(const QString &ssid);
     void onStateChanged(Device::State newstate, Device::State oldstate, Device::StateChangeReason reason);
     void onActiveAccessPointChanged(const QString &ap);
-    void onActivateConnectionFinished(QDBusPendingCallWatcher *watcher);
     void onDeviceActiveConnectionChanged();
 
 private:
