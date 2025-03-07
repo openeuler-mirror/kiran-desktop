@@ -54,15 +54,15 @@ public:
     WifiSecurityTypeList networkSupportSecurityTypeList(const QString &ssid);
 
     // 激活网络,使用已有的网络配置
-    void activateNetowrk(const QString &ssid);
+    QDBusPendingCall  activateNetowrk(const QString &ssid);
 
     // 添加密码形式激活网络配置并尝试激活隐藏网络
     // 适用于WpaPsk/Wpa2Psk/Wpa3 Person/WpaNone
-    void addAndActivateHiddenNetwork(const QString &ssid, const QString &password, WifiSecurityType securityType);
+    QDBusPendingCall addAndActivateHiddenNetwork(const QString &ssid, const QString &password, WifiSecurityType securityType);
 
     // 添加密码形式激活网的配置并尝试激活网络
     // 适用于WpaPsk/Wpa2Psk/Wpa3 Person/WpaNone
-    void addAndActivateNetwork(const QString &ssid, const QString &password);
+    QDBusPendingCall addAndActivateNetwork(const QString &ssid, const QString &password);
 
     // 添加EAP形式激活网的配置并尝试激活网络
     // 适用于Wpa/Wpa2 Enterprise
@@ -72,7 +72,7 @@ public:
     void removeNetworkConnection(const QString &ssid);
 
     // 断开该无线网卡上已激活的连接
-    void deactivateConnection();
+    QDBusPendingCall deactivateConnection();
 
 signals:
     // 设备状态改变信号

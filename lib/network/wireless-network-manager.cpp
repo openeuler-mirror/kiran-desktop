@@ -137,31 +137,36 @@ void WirelessNetworkManager::removeNetworkConnection(const QString &ssid)
     }
 }
 
-void WirelessNetworkManager::deactivateConnection()
+QDBusPendingCall WirelessNetworkManager::deactivateConnection()
 {
     auto activeConnection = d_ptr->m_device->activeConnection();
     if (activeConnection.isNull())
     {
+        auto successReply = QDBusPendingCall::fromError(QDBusError(QDBusError::NoError, ""));
         KLOG_WARNING(qLcNetwork) << interfaceName() << "deactivate connecion failed, no active connection";
-        return;
+        return successReply;
     }
 
     KLOG_INFO(qLcNetwork) << "deactivate" << interfaceName()
                           << activeConnection->id()
                           << activeConnection->path();
-    NetworkManager::deactivateConnection(activeConnection->path());
+    auto pendingReply = NetworkManager::deactivateConnection(activeConnection->path());
+    return pendingReply;
 }
 
-void WirelessNetworkManager::activateNetowrk(const QString &ssid)
+QDBusPendingCall WirelessNetworkManager::activateNetowrk(const QString &ssid)
 {
-    RETURN_IF_FALSE_WITH_WARNNING(d_ptr->m_networkInfoMap.contains(ssid),
-                                  QString("network %1 not exists").arg(ssid));
+    auto errorReply = QDBusPendingCall::fromError(QDBusError(QDBusError::InternalError, ""));
+
+    RETURN_VAL_IF_FALSE_WITH_WARNNING(d_ptr->m_networkInfoMap.contains(ssid),
+                                      errorReply,
+                                      QString("network %1 not exists").arg(ssid));
 
     auto networkInfo = d_ptr->m_networkInfoMap[ssid];
     auto connectionList = d_ptr->getWirelessNetworkConnection(ssid);
 
     if (connectionList.isEmpty())
-        return;
+        return errorReply;
 
     auto connection = connectionList.first();
     KLOG_INFO(qLcNetwork).nospace() << "activate " << d_ptr->m_device->interfaceName()
@@ -171,18 +176,14 @@ void WirelessNetworkManager::activateNetowrk(const QString &ssid)
     auto pendingReply = NetworkManager::activateConnection(connection->path(),
                                                            d_ptr->m_device->uni(),
                                                            networkInfo.referencePointPath);
-
-    auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
-    pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
-    connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
-            d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
-    return;
+    return pendingReply;
 }
 
-void WirelessNetworkManager::addAndActivateHiddenNetwork(const QString &ssid,
-                                                         const QString &password,
-                                                         WifiSecurityType securityType)
+QDBusPendingCall WirelessNetworkManager::addAndActivateHiddenNetwork(const QString &ssid,
+                                                                     const QString &password,
+                                                                     WifiSecurityType securityType)
 {
+    auto errorReply = QDBusPendingCall::fromError(QDBusError(QDBusError::InternalError, ""));
     KLOG_INFO(qLcNetwork).nospace() << "activate " << d_ptr->m_device->interfaceName()
                                     << " network(" << ssid << ")";
 
@@ -191,30 +192,28 @@ void WirelessNetworkManager::addAndActivateHiddenNetwork(const QString &ssid,
     {
         KLOG_WARNING(qLcNetwork) << "create connection settings for" << ssid
                                  << "failed, unsupported security type";
-        return;
+        return errorReply;
     }
 
     auto pendingReply = addAndActivateConnection(connectionSettings->toMap(),
                                                  d_ptr->m_device->uni(),
                                                  "");
-
-    auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
-    pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
-    connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
-            d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
+    return pendingReply;
 }
 
-void WirelessNetworkManager::addAndActivateNetwork(const QString &ssid, const QString &password)
+QDBusPendingCall WirelessNetworkManager::addAndActivateNetwork(const QString &ssid, const QString &password)
 {
     ConnectionSettings::Ptr connectionSettings;
+    auto errorReply = QDBusPendingCall::fromError(QDBusError(QDBusError::InternalError, ""));
     static QList<WifiSecurityType> recommendSecurityList = {
         SECURITY_TYPE_WPA3_PERSON,
         SECURITY_TYPE_WPA_AND_WPA2_PERSON,
         SECURITY_TYPE_NONE,
     };
 
-    RETURN_IF_FALSE_WITH_WARNNING(d_ptr->m_networkInfoMap.contains(ssid),
-                                  QString("network %1 not exists").arg(ssid));
+    RETURN_VAL_IF_FALSE_WITH_WARNNING(d_ptr->m_networkInfoMap.contains(ssid),
+                                      errorReply,
+                                      QString("network %1 not exists").arg(ssid));
 
     auto networkInfo = d_ptr->m_networkInfoMap[ssid];
     auto supportedSecurityTypes = d_ptr->getSupportedNetworkSecuritys(ssid);
@@ -230,17 +229,13 @@ void WirelessNetworkManager::addAndActivateNetwork(const QString &ssid, const QS
     {
         KLOG_WARNING(qLcNetwork) << "create connection settings for" << ssid << "failed,"
                                  << "unsupported security type";
-        return;
+        return errorReply;
     }
 
     auto pendingReply = addAndActivateConnection(connectionSettings->toMap(),
                                                  d_ptr->m_device->uni(),
                                                  networkInfo.referencePointPath);
-    auto pendingCallWatcher = new QDBusPendingCallWatcher(pendingReply, this);
-    pendingCallWatcher->setProperty(DBUS_WATCHER_PROPERTY_SSID, ssid);
-    connect(pendingCallWatcher, &QDBusPendingCallWatcher::finished,
-            d_ptr, &WirelessNetworkManagerPrivate::onActivateConnectionFinished);
-    return;
+    return pendingReply;
 }
 
 WirelessNetworkManagerPrivate::WirelessNetworkManagerPrivate(
@@ -308,13 +303,6 @@ void WirelessNetworkManagerPrivate::onStateChanged(Device::State newstate, Devic
 void WirelessNetworkManagerPrivate::onActiveAccessPointChanged(const QString &ap)
 {
     KLOG_DEBUG(qLcNetwork) << "active ap changed:" << ap;
-}
-
-void WirelessNetworkManagerPrivate::onActivateConnectionFinished(QDBusPendingCallWatcher *watcher)
-{
-    auto reply = watcher->reply();
-    auto ssid = watcher->property(DBUS_WATCHER_PROPERTY_SSID).toString();
-    KLOG_DEBUG(qLcNetwork) << ssid << "activate connection pending call finished" << reply;
 }
 
 /**
