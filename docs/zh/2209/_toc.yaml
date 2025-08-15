@@ -1,0 +1,8 @@
+label: Kiran用户指南
+isManual: true
+description: 安装并使用 Kiran 桌面环境
+sections:
+  - label: 安装 Kiran
+    href: ./kiran_installation.md
+  - label: 使用 Kiran
+    href: ./kiran_user_guide.md

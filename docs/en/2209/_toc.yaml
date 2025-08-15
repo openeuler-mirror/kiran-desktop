@@ -1,0 +1,8 @@
+label: Kiran User Guide
+isManual: true
+description: Install and use Kiran.
+sections:
+  - label: Kiran Installation
+    href: ./kiran_installation.md
+  - label: Kiran User Guide
+    href: ./kiran_user_guide.md
