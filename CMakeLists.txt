@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0...${CMAKE_VERSION})
 
 project(kiran-desktop VERSION 2.7)
 set(KIRAN_DESKTOP_VERSION 2.7)
