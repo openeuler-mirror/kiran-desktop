@@ -8,7 +8,7 @@ Kiran desktop environment, developed by Kylinsec, is a stable, efficient, and ea
 
 You are advised to install Kiran as the **root** user or a newly created administrator.
 
-1. Download the openEuler 22.09 ISO file and install the OS.
+1. Download the openEuler ISO file and install the OS.
 
 2. Update the software repository.
 
