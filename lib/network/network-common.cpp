@@ -40,6 +40,7 @@ WirelessNetworkInfo::WirelessNetworkInfo(QString _ssid, QString _referencePointP
     : ssid(_ssid), referencePointPath(_referencePointPath), signalStreagth(_signalStreagth)
 {
 }
-WirelessNetworkInfo::WirelessNetworkInfo() {
-};
+WirelessNetworkInfo::WirelessNetworkInfo() : signalStreagth(0)
+{
+}
 }  // namespace Kiran
