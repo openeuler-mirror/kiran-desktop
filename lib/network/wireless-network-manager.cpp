@@ -217,11 +217,19 @@ QDBusPendingCall WirelessNetworkManager::addAndActivateNetwork(const QString &ss
 
     auto networkInfo = d_ptr->m_networkInfoMap[ssid];
     auto supportedSecurityTypes = d_ptr->getSupportedNetworkSecuritys(ssid);
+    // 推荐列表已按安全强度从高到低排列，命中第一个可成功构造的类型后即停止，
+    // 避免后续较弱类型覆盖已选结果。
     for (auto recommendSecurity : recommendSecurityList)
     {
-        if (supportedSecurityTypes.contains(recommendSecurity))
+        if (!supportedSecurityTypes.contains(recommendSecurity))
         {
-            connectionSettings = d_ptr->createConnectionSettings(ssid, recommendSecurity, password);
+            continue;
+        }
+
+        connectionSettings = d_ptr->createConnectionSettings(ssid, recommendSecurity, password);
+        if (!connectionSettings.isNull())
+        {
+            break;
         }
     }
 
